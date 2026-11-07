@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --color-cockpit-bg: #090d16;
+  --color-cockpit-card: #111726;
+  --color-cockpit-card-hover: #172036;
+  --color-cockpit-border: #1f2a44;
+  --color-boeing-amber: #f59e0b;
+  --color-airbus-cyan: #06b6d4;
+  --color-avionics-green: #10b981;
+}
+
+/* Custom scrollbars for tablet / desktop */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #090d16;
+}
+::-webkit-scrollbar-thumb {
+  background: #1f2a44;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Prevent accidental double-tap zoom on tablet buttons */
+button, [role="button"] {
+  touch-action: manipulation;
+}
