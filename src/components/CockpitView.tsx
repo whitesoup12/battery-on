@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Aircraft } from '../types/aircraft';
+import { Aircraft, FlightSegment } from '../types/aircraft';
 import { LocationBadge } from './LocationBadge';
 import {
   Check,
@@ -9,6 +9,9 @@ import {
   ChevronLeft,
   Info,
   Sliders,
+  PlaneTakeoff,
+  Compass,
+  PlaneLanding,
 } from 'lucide-react';
 
 interface CockpitViewProps {
@@ -19,6 +22,8 @@ interface CockpitViewProps {
   resetPhase: (aircraftId: string, phaseItemIds: string[]) => void;
 }
 
+type FilterSegment = 'ALL' | FlightSegment;
+
 export function CockpitView({
   aircraft,
   isItemCompleted,
@@ -27,6 +32,7 @@ export function CockpitView({
   resetPhase,
 }: CockpitViewProps) {
   const [activePhaseIndex, setActivePhaseIndex] = useState(0);
+  const [selectedSegment, setSelectedSegment] = useState<FilterSegment>('ALL');
   const [showNotes, setShowNotes] = useState(true);
 
   const activePhase = aircraft.phases[activePhaseIndex] || aircraft.phases[0];
@@ -44,26 +50,158 @@ export function CockpitView({
   const isCurrentPhaseComplete =
     phaseItemIds.length > 0 && phaseCompletedCount === phaseItemIds.length;
 
+  // Segment statistics
+  const segmentStats = useMemo(() => {
+    const stats = {
+      DEPARTURE: { done: 0, total: 0 },
+      ENROUTE: { done: 0, total: 0 },
+      ARRIVAL: { done: 0, total: 0 },
+    };
+
+    aircraft.phases.forEach((phase) => {
+      const totalInPhase = phase.items.length;
+      const doneInPhase = phase.items.filter((i) =>
+        isItemCompleted(aircraft.id, i.id)
+      ).length;
+
+      stats[phase.segment].total += totalInPhase;
+      stats[phase.segment].done += doneInPhase;
+    });
+
+    return stats;
+  }, [aircraft, isItemCompleted]);
+
+  // Filtered phases based on segment tab
+  const displayedPhases = useMemo(() => {
+    if (selectedSegment === 'ALL') {
+      return aircraft.phases.map((phase, originalIdx) => ({
+        phase,
+        originalIdx,
+      }));
+    }
+    return aircraft.phases
+      .map((phase, originalIdx) => ({ phase, originalIdx }))
+      .filter(({ phase }) => phase.segment === selectedSegment);
+  }, [aircraft.phases, selectedSegment]);
+
   const handleNextPhase = () => {
     if (activePhaseIndex < aircraft.phases.length - 1) {
-      setActivePhaseIndex((prev) => prev + 1);
+      const nextIdx = activePhaseIndex + 1;
+      setActivePhaseIndex(nextIdx);
+      // Auto-update segment filter tab if it was set to something else
+      const nextPhase = aircraft.phases[nextIdx];
+      if (selectedSegment !== 'ALL' && nextPhase.segment !== selectedSegment) {
+        setSelectedSegment(nextPhase.segment);
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handlePrevPhase = () => {
     if (activePhaseIndex > 0) {
-      setActivePhaseIndex((prev) => prev - 1);
+      const prevIdx = activePhaseIndex - 1;
+      setActivePhaseIndex(prevIdx);
+      const prevPhase = aircraft.phases[prevIdx];
+      if (selectedSegment !== 'ALL' && prevPhase.segment !== selectedSegment) {
+        setSelectedSegment(prevPhase.segment);
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
+  const selectPhase = (originalIdx: number) => {
+    setActivePhaseIndex(originalIdx);
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 sm:px-6">
-      {/* 1. Top Phase Stepper / Nav Bar */}
+      {/* 1. Macro Flight Segment Switcher Tabs */}
+      <div className="mb-4 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
+        <button
+          onClick={() => setSelectedSegment('ALL')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-semibold transition-all border ${
+            selectedSegment === 'ALL'
+              ? 'bg-slate-200 text-slate-900 border-white shadow-sm'
+              : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200 hover:bg-slate-800'
+          }`}
+        >
+          <span>ALL PHASES</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded bg-black/20">
+            {aircraft.phases.length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => {
+            setSelectedSegment('DEPARTURE');
+            // If active phase isn't in departure, jump to first departure phase
+            if (activePhase.segment !== 'DEPARTURE') {
+              const firstDep = aircraft.phases.findIndex((p) => p.segment === 'DEPARTURE');
+              if (firstDep !== -1) setActivePhaseIndex(firstDep);
+            }
+          }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-semibold transition-all border ${
+            selectedSegment === 'DEPARTURE'
+              ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-sm'
+              : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200 hover:bg-slate-800'
+          }`}
+        >
+          <PlaneTakeoff className="w-3.5 h-3.5" />
+          <span>DEPARTURE</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded bg-black/20">
+            {segmentStats.DEPARTURE.done}/{segmentStats.DEPARTURE.total}
+          </span>
+        </button>
+
+        <button
+          onClick={() => {
+            setSelectedSegment('ENROUTE');
+            if (activePhase.segment !== 'ENROUTE') {
+              const firstEnr = aircraft.phases.findIndex((p) => p.segment === 'ENROUTE');
+              if (firstEnr !== -1) setActivePhaseIndex(firstEnr);
+            }
+          }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-semibold transition-all border ${
+            selectedSegment === 'ENROUTE'
+              ? 'bg-sky-500 text-slate-950 border-sky-400 shadow-sm'
+              : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200 hover:bg-slate-800'
+          }`}
+        >
+          <Compass className="w-3.5 h-3.5" />
+          <span>EN ROUTE</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded bg-black/20">
+            {segmentStats.ENROUTE.done}/{segmentStats.ENROUTE.total}
+          </span>
+        </button>
+
+        <button
+          onClick={() => {
+            setSelectedSegment('ARRIVAL');
+            if (activePhase.segment !== 'ARRIVAL') {
+              const firstArr = aircraft.phases.findIndex((p) => p.segment === 'ARRIVAL');
+              if (firstArr !== -1) setActivePhaseIndex(firstArr);
+            }
+          }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-semibold transition-all border ${
+            selectedSegment === 'ARRIVAL'
+              ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-sm'
+              : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200 hover:bg-slate-800'
+          }`}
+        >
+          <PlaneLanding className="w-3.5 h-3.5" />
+          <span>ARRIVAL & SHUTDOWN</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded bg-black/20">
+            {segmentStats.ARRIVAL.done}/{segmentStats.ARRIVAL.total}
+          </span>
+        </button>
+      </div>
+
+      {/* 2. Sub-Phase Stepper Carousel */}
       <div className="mb-6 bg-[#0f1626] border border-slate-800 rounded-2xl p-2 sm:p-3 shadow-lg">
         <div className="flex items-center justify-between px-2 pb-2 mb-2 border-b border-slate-800/80 text-xs font-mono text-slate-400">
-          <span className="uppercase tracking-wider">Flight Deck Flow Phases</span>
+          <span className="uppercase tracking-wider">
+            Flow Checklist Steps ({displayedPhases.length} available)
+          </span>
           <span>
             Phase {activePhaseIndex + 1} of {aircraft.phases.length}
           </span>
@@ -71,8 +209,8 @@ export function CockpitView({
 
         {/* Phase Pill Buttons */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
-          {aircraft.phases.map((phase, idx) => {
-            const isSelected = idx === activePhaseIndex;
+          {displayedPhases.map(({ phase, originalIdx }) => {
+            const isSelected = originalIdx === activePhaseIndex;
             const itemsInPhase = phase.items.map((i) => i.id);
             const doneCount = itemsInPhase.filter((id) =>
               isItemCompleted(aircraft.id, id)
@@ -82,7 +220,7 @@ export function CockpitView({
             return (
               <button
                 key={phase.id}
-                onClick={() => setActivePhaseIndex(idx)}
+                onClick={() => selectPhase(originalIdx)}
                 className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all border ${
                   isSelected
                     ? 'bg-cyan-950/70 text-cyan-200 border-cyan-500/80 shadow-[0_0_12px_rgba(6,182,212,0.25)] font-semibold'
@@ -100,7 +238,7 @@ export function CockpitView({
                       : 'bg-slate-800 text-slate-400'
                   }`}
                 >
-                  {isPhaseDone ? '✓' : idx + 1}
+                  {isPhaseDone ? '✓' : originalIdx + 1}
                 </span>
 
                 <span className="whitespace-nowrap">{phase.shortTitle}</span>
@@ -122,12 +260,12 @@ export function CockpitView({
         </div>
       </div>
 
-      {/* 2. Active Phase Header & Batch Controls */}
+      {/* 3. Active Phase Header & Batch Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-400">
-              Active Checklist Phase
+              {activePhase.segment} • Phase {activePhaseIndex + 1}
             </span>
             <span className="text-slate-600">•</span>
             <span className="text-xs font-mono text-slate-400">
@@ -178,7 +316,7 @@ export function CockpitView({
         </div>
       </div>
 
-      {/* 3. Checklist Items List */}
+      {/* 4. Checklist Items List */}
       <div className="space-y-3 mb-8">
         {activePhase.items.map((item, index) => {
           const completed = isItemCompleted(aircraft.id, item.id);
@@ -261,7 +399,7 @@ export function CockpitView({
         })}
       </div>
 
-      {/* 4. Bottom Navigation & Phase Completion Flow */}
+      {/* 5. Bottom Navigation & Flight Completion */}
       <div className="bg-[#0f1626] border border-slate-800 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4 shadow-xl">
         <button
           onClick={handlePrevPhase}
@@ -299,11 +437,11 @@ export function CockpitView({
         ) : (
           <button
             onClick={() => {
-              alert('All cold-and-dark checklist phases completed! Have a great flight!');
+              alert('Full flight completed! Aircraft successfully shut down to Cold & Dark. Great job, Captain!');
             }}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors shadow-lg shadow-emerald-950/40"
           >
-            <span>Ready for Takeoff</span>
+            <span>Flight Complete</span>
             <Check className="w-4 h-4" />
           </button>
         )}

@@ -13,6 +13,8 @@ export type PanelLocation =
   | 'MAIN PANEL'
   | 'FMS / MCDU';
 
+export type FlightSegment = 'DEPARTURE' | 'ENROUTE' | 'ARRIVAL';
+
 export interface ChecklistItem {
   id: string;
   item: string;
@@ -26,6 +28,7 @@ export interface FlightPhase {
   title: string;
   shortTitle: string;
   subtitle: string;
+  segment: FlightSegment;
   items: ChecklistItem[];
 }
 
