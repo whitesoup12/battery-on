@@ -29,11 +29,17 @@ Every step corresponds directly to clickable buttons, knobs, or CDU pages inside
 
 ## ✨ Features
 
+- **Preflight Workflow Walkthrough (Default Flow)**: Chronological step-by-step preflight combining cockpit EFB tablet actions (GPU ground power, SimBrief OFP import, passenger boarding, fuel loading, and Takeoff V-speed calculation) with FMC/MCDU flight plan initialization in the exact order real pilots fly.
+- **Interactive Device Simulation**: Dynamic live displays that switch between an authentic EFB tablet frame and a CRT Line Select Key CDU display depending on the active cockpit device.
+- **Manual Route from Scratch**: Interactive live avionics simulator covering full flight plan entry without SimBrief (e.g. KLAX ➔ KSFO), VIA/TO airway matrices, ND PLAN mode verification, Cost Index (CI), and takeoff V-speeds (V1/VR/V2).
+- **Troubleshooting & Avionics Reference Hub**: One-click contextual deep-linking from the preflight workflow to dedicated guides for Discontinuities (causes, resolution, and when NOT to delete), a searchable Simulator Error Dictionary (`NOT IN DATABASE`, `INVALID ENTRY`, `PERF DISAGREE`), VIA/TO Airway Logic, and the Airbus vs Boeing Rosetta Stone.
+- **Electronic Flight Bag (EFB) & V-Speed Calculator**: Cockpit tablet app simulator covering Takeoff & Landing Performance calculations, one-click `SEND TO FMS` sync for V-speeds and trim, passenger/cargo boarding, SimBrief OFP viewer, and ground services (GPU, chocks, and pushback tug).
 - **Hangar Card Grid**: Visual aircraft tiles showing manufacturer badges, engine counts, FMS type, and active flight progress.
 - **iPad / Tablet Optimized**: Large touch targets, dark mode cockpit aesthetics (`#090d16`), prevent accidental double-tap zoom.
 - **Accidental Tap Protection**: Tap any item to toggle done/undone; batch **Clear Phase** and **Unclear Phase** buttons for quick resets.
 - **Panel Location Badges**: Instant visual hints (`[OVHD - ELEC]`, `[PEDESTAL]`, `[GLARESHIELD]`, `[MCDU]`).
 - **Collapsible POH Notes**: Guidance and tips from actual flight crew operating manuals tailored for MSFS simmers.
+- **Simulator Error Dictionary**: Instant lookup and solutions for cryptic CDU scratchpad warnings (`NOT IN DATABASE`, `INVALID ENTRY`, `PERF DISAGREE`, `TAKEOFF SPEEDS DELETED`).
 - **Offline & Local Storage Persistence**: State persists automatically across page reloads.
 
 ---

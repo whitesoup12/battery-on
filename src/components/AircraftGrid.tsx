@@ -4,6 +4,7 @@ import { ArrowRight, CheckCircle2, Cpu } from 'lucide-react';
 interface AircraftGridProps {
   aircraftList: Aircraft[];
   onSelectAircraft: (aircraft: Aircraft) => void;
+  onOpenFmsGuide?: (aircraft: Aircraft) => void;
   getProgress: (aircraftId: string, totalItems: number) => {
     completed: number;
     total: number;
@@ -14,18 +15,32 @@ interface AircraftGridProps {
 export function AircraftGrid({
   aircraftList,
   onSelectAircraft,
+  onOpenFmsGuide,
   getProgress,
 }: AircraftGridProps) {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6">
       {/* Title & Welcome */}
-      <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
-          <span>Flight Deck Hangar</span>
-        </h1>
-        <p className="text-slate-400 text-sm sm:text-base mt-1.5 max-w-2xl">
-          Select an aircraft to begin your cold-and-dark cockpit setup flow for Microsoft Flight Simulator 2024.
-        </p>
+      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
+            <span>Flight Deck Hangar</span>
+          </h1>
+          <p className="text-slate-400 text-sm sm:text-base mt-1.5 max-w-2xl">
+            Select an aircraft to begin your cold-and-dark cockpit setup flow for Microsoft Flight Simulator 2024.
+          </p>
+        </div>
+
+        {onOpenFmsGuide && (
+          <button
+            onClick={() => onOpenFmsGuide(aircraftList[0])}
+            className="self-start md:self-auto flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-950 to-slate-900 border border-cyan-800/80 hover:border-cyan-500 text-cyan-200 text-xs sm:text-sm font-mono font-semibold transition-all shadow-md group"
+          >
+            <Cpu className="w-4 h-4 text-cyan-400 group-hover:rotate-12 transition-transform" />
+            <span>FMC / MCDU Deep Dive Guide</span>
+            <ArrowRight className="w-4 h-4 text-cyan-400 group-hover:translate-x-0.5 transition-transform" />
+          </button>
+        )}
       </div>
 
       {/* Grid of Aircraft Cards */}
@@ -182,9 +197,25 @@ export function AircraftGrid({
                   )}
                 </div>
 
-                <div className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 group-hover:bg-cyan-600 group-hover:text-white text-slate-300 text-xs font-medium transition-colors">
-                  <span>{isStarted ? 'Resume' : 'Start Flow'}</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                <div className="flex items-center gap-2">
+                  {onOpenFmsGuide && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenFmsGuide(aircraft);
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-cyan-950 hover:text-cyan-300 hover:border-cyan-800/80 text-slate-400 text-xs font-mono transition-colors border border-slate-700/60"
+                      title={`Open ${aircraft.fmsName} Guide`}
+                    >
+                      <Cpu className="w-3.5 h-3.5 text-cyan-400" />
+                      <span className="hidden sm:inline">{aircraft.fmsName} Guide</span>
+                    </button>
+                  )}
+
+                  <div className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 group-hover:bg-cyan-600 group-hover:text-white text-slate-300 text-xs font-medium transition-colors">
+                    <span>{isStarted ? 'Resume' : 'Start Flow'}</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  </div>
                 </div>
               </div>
             </div>

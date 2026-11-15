@@ -1,4 +1,4 @@
-import { Zap, ChevronLeft, RotateCcw, Plane } from 'lucide-react';
+import { Zap, ChevronLeft, RotateCcw, Plane, Cpu, CheckSquare } from 'lucide-react';
 import { Aircraft } from '../types/aircraft';
 
 interface HeaderProps {
@@ -6,6 +6,9 @@ interface HeaderProps {
   onBackToHangar: () => void;
   onResetAircraft?: () => void;
   progressPercent?: number;
+  viewMode?: 'CHECKLISTS' | 'FMS_GUIDE';
+  onViewModeChange?: (mode: 'CHECKLISTS' | 'FMS_GUIDE') => void;
+  onOpenFmsGuideDirect?: () => void;
 }
 
 export function Header({
@@ -13,10 +16,13 @@ export function Header({
   onBackToHangar,
   onResetAircraft,
   progressPercent = 0,
+  viewMode = 'CHECKLISTS',
+  onViewModeChange,
+  onOpenFmsGuideDirect,
 }: HeaderProps) {
   return (
     <header className="sticky top-0 z-30 bg-[#090d16]/95 backdrop-blur-md border-b border-slate-800/80 px-4 py-3 sm:px-6">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
         {/* Left: App Branding or Back Button */}
         <div className="flex items-center gap-3">
           {activeAircraft ? (
@@ -63,26 +69,57 @@ export function Header({
           )}
         </div>
 
+        {/* Center / Navigation Switcher for Active Aircraft */}
+        {activeAircraft && onViewModeChange && (
+          <div className="flex items-center bg-slate-900 border border-slate-800 p-1 rounded-xl text-xs font-mono">
+            <button
+              onClick={() => onViewModeChange('CHECKLISTS')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all ${
+                viewMode === 'CHECKLISTS'
+                  ? 'bg-slate-700 text-white font-bold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <CheckSquare className="w-3.5 h-3.5" />
+              <span className="hidden xs:inline">Checklists</span>
+            </button>
+
+            <button
+              onClick={() => onViewModeChange('FMS_GUIDE')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all ${
+                viewMode === 'FMS_GUIDE'
+                  ? 'bg-cyan-600 text-white font-bold shadow-sm'
+                  : 'text-slate-400 hover:text-cyan-300'
+              }`}
+            >
+              <Cpu className="w-3.5 h-3.5" />
+              <span>{activeAircraft.fmsName} Guide</span>
+            </button>
+          </div>
+        )}
+
         {/* Right: Reset & Controls */}
         <div className="flex items-center gap-3">
-          {activeAircraft && (
+          {activeAircraft ? (
             <>
-              {/* Progress pill */}
-              <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg">
-                <span className="text-xs font-mono text-slate-400 hidden sm:inline">Progress</span>
-                <span className="text-xs font-mono font-bold text-emerald-400">
-                  {progressPercent}%
-                </span>
-                <div className="w-16 h-1.5 bg-slate-800 rounded-full overflow-hidden hidden xs:block">
-                  <div
-                    className="h-full bg-emerald-500 transition-all duration-300 rounded-full"
-                    style={{ width: `${progressPercent}%` }}
-                  />
+              {/* Progress pill - only in checklist mode */}
+              {viewMode === 'CHECKLISTS' && (
+                <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg">
+                  <span className="text-xs font-mono text-slate-400 hidden sm:inline">Progress</span>
+                  <span className="text-xs font-mono font-bold text-emerald-400">
+                    {progressPercent}%
+                  </span>
+                  <div className="w-16 h-1.5 bg-slate-800 rounded-full overflow-hidden hidden xs:block">
+                    <div
+                      className="h-full bg-emerald-500 transition-all duration-300 rounded-full"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Reset aircraft progress button */}
-              {onResetAircraft && (
+              {onResetAircraft && viewMode === 'CHECKLISTS' && (
                 <button
                   onClick={() => {
                     if (
@@ -101,12 +138,21 @@ export function Header({
                 </button>
               )}
             </>
-          )}
-
-          {!activeAircraft && (
-            <div className="flex items-center gap-1 text-xs text-slate-400 font-mono bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800">
-              <Plane className="w-3.5 h-3.5 text-slate-400" />
-              <span>5 Standard Aircraft</span>
+          ) : (
+            <div className="flex items-center gap-2">
+              {onOpenFmsGuideDirect && (
+                <button
+                  onClick={onOpenFmsGuideDirect}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-950/70 hover:bg-cyan-900/80 text-cyan-300 border border-cyan-800/70 text-xs font-mono transition-all"
+                >
+                  <Cpu className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>FMC / MCDU Guide</span>
+                </button>
+              )}
+              <div className="hidden sm:flex items-center gap-1 text-xs text-slate-400 font-mono bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800">
+                <Plane className="w-3.5 h-3.5 text-slate-400" />
+                <span>5 Standard Aircraft</span>
+              </div>
             </div>
           )}
         </div>

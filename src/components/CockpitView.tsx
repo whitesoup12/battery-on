@@ -12,6 +12,8 @@ import {
   PlaneTakeoff,
   Compass,
   PlaneLanding,
+  Cpu,
+  ArrowRight,
 } from 'lucide-react';
 
 interface CockpitViewProps {
@@ -20,6 +22,7 @@ interface CockpitViewProps {
   toggleItem: (aircraftId: string, itemId: string) => void;
   markPhaseComplete: (aircraftId: string, phaseItemIds: string[]) => void;
   resetPhase: (aircraftId: string, phaseItemIds: string[]) => void;
+  onOpenFmsGuide?: () => void;
 }
 
 type FilterSegment = 'ALL' | FlightSegment;
@@ -30,6 +33,7 @@ export function CockpitView({
   toggleItem,
   markPhaseComplete,
   resetPhase,
+  onOpenFmsGuide,
 }: CockpitViewProps) {
   const [activePhaseIndex, setActivePhaseIndex] = useState(0);
   const [selectedSegment, setSelectedSegment] = useState<FilterSegment>('ALL');
@@ -315,6 +319,45 @@ export function CockpitView({
           )}
         </div>
       </div>
+
+      {/* Interactive FMC/MCDU Deep Dive Callout for Setup Phase */}
+      {(activePhase.id.endsWith('-p3') ||
+        activePhase.title.toLowerCase().includes('mcdu') ||
+        activePhase.title.toLowerCase().includes('fmc') ||
+        activePhase.title.toLowerCase().includes('fms') ||
+        activePhase.shortTitle.toLowerCase().includes('setup')) &&
+        onOpenFmsGuide && (
+          <div className="mb-6 bg-gradient-to-r from-cyan-950/40 via-[#0f172a] to-cyan-950/40 border border-cyan-800/60 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0 mt-0.5">
+                <Cpu className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-400">
+                    FMC / MCDU Deep Dive Guide
+                  </span>
+                  <span className="text-[10px] font-mono px-2 py-0.2 rounded-full bg-cyan-900/60 text-cyan-200 border border-cyan-700/50">
+                    Route from Scratch
+                  </span>
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-white">
+                  Need step-by-step guidance programming the {aircraft.fmsName}?
+                </h3>
+                <p className="text-xs text-slate-300 mt-0.5 max-w-xl">
+                  Interactive walkthrough for origin/dest entry, SID/STAR runway selection, VIA/TO airway matrices, clearing discontinuities, and V-speeds.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onOpenFmsGuide}
+              className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs sm:text-sm font-mono font-bold transition-all shadow-md shadow-cyan-950/50 active:scale-95"
+            >
+              <span>Launch {aircraft.fmsName} Guide</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
       {/* 4. Checklist Items List */}
       <div className="space-y-3 mb-8">
